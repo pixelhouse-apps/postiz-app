@@ -2,7 +2,8 @@
 # Slimmer variant of Dockerfile.dev for Fly.io. The upstream image ships the pnpm
 # store, the Next.js build cache and the compilers (about 13 GB), which is too big
 # to push reliably to Fly's registry. This builds in one stage and copies only
-# what pm2 needs at runtime into the next.
+# what pm2 needs at runtime into the next, with node_modules spread over several
+# layers because the registry also fails on a single multi-GB layer.
 
 FROM node:22.20-bookworm-slim AS base
 RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
@@ -24,6 +25,7 @@ RUN --mount=type=cache,id=postiz-pnpm-store,target=/root/.local/share/pnpm/store
     pnpm install
 RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build \
  && rm -rf apps/frontend/.next/cache
+RUN node fly/split-node-modules.mjs /app/node_modules /split 8
 
 FROM base
 ARG NEXT_PUBLIC_VERSION
@@ -41,6 +43,14 @@ RUN addgroup --system www \
 COPY var/docker/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /root/.cache/prisma /root/.cache/prisma
 COPY --from=build /app /app
+COPY --from=build /split/0/ /app/
+COPY --from=build /split/1/ /app/
+COPY --from=build /split/2/ /app/
+COPY --from=build /split/3/ /app/
+COPY --from=build /split/4/ /app/
+COPY --from=build /split/5/ /app/
+COPY --from=build /split/6/ /app/
+COPY --from=build /split/7/ /app/
 WORKDIR /app
 
 CMD ["sh", "-c", "nginx && pnpm run pm2"]
