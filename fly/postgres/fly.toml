@@ -1,0 +1,24 @@
+# Postgres for Postiz and Temporal. Private: reachable only on the org network
+# as pixelhouse-postiz-db.internal:5432.
+app = 'pixelhouse-postiz-db'
+primary_region = 'syd'
+
+[build]
+  image = 'postgres:17-alpine'
+
+[env]
+  PGDATA = '/var/lib/postgresql/data/pgdata'
+
+[mounts]
+  source = 'pgdata'
+  destination = '/var/lib/postgresql/data'
+  initial_size = '10gb'
+
+# Runs once, when the data directory is first initialised.
+[[files]]
+  guest_path = '/docker-entrypoint-initdb.d/init.sh'
+  local_path = 'init.sh'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '1gb'

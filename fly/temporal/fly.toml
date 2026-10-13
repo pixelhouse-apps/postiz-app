@@ -1,0 +1,28 @@
+# Temporal server for Postiz's scheduled jobs, backed by pixelhouse-postiz-db.
+# Private: reachable only on the org network as pixelhouse-postiz-temporal.internal:7233.
+app = 'pixelhouse-postiz-temporal'
+primary_region = 'syd'
+
+[build]
+  image = 'temporalio/auto-setup:1.28.1'
+
+[env]
+  DB = 'postgres12'
+  DB_PORT = '5432'
+  POSTGRES_USER = 'temporal'
+  POSTGRES_SEEDS = 'pixelhouse-postiz-db.internal'
+  BIND_ON_IP = '::0'
+  DYNAMIC_CONFIG_FILE_PATH = '/etc/temporal/config/dynamicconfig/postiz.yaml'
+  TEMPORAL_NAMESPACE = 'default'
+  # The test attributes would use up the SQL visibility slots Postiz needs.
+  SKIP_ADD_CUSTOM_SEARCH_ATTRIBUTES = 'true'
+  # The databases are created by fly/postgres/init.sh.
+  SKIP_DB_CREATE = 'true'
+
+[[files]]
+  guest_path = '/etc/temporal/config/dynamicconfig/postiz.yaml'
+  local_path = 'dynamicconfig.yaml'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '1gb'

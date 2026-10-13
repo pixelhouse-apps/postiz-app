@@ -1,0 +1,45 @@
+# Postiz app (frontend, backend and orchestrator under pm2, behind nginx on :5000).
+# Supporting services live in fly/: deploy those first, see fly/README.md.
+app = 'pixelhouse-postiz'
+primary_region = 'syd'
+
+[build]
+  dockerfile = 'Dockerfile.dev'
+
+[env]
+  MAIN_URL = 'https://pixelhouse-postiz.fly.dev'
+  FRONTEND_URL = 'https://pixelhouse-postiz.fly.dev'
+  NEXT_PUBLIC_BACKEND_URL = 'https://pixelhouse-postiz.fly.dev/api'
+  BACKEND_INTERNAL_URL = 'http://localhost:3000'
+  TEMPORAL_ADDRESS = 'pixelhouse-postiz-temporal.internal:7233'
+  IS_GENERAL = 'true'
+  DISABLE_REGISTRATION = 'false'
+  STORAGE_PROVIDER = 'local'
+  UPLOAD_DIRECTORY = '/uploads'
+  NEXT_PUBLIC_UPLOAD_DIRECTORY = '/uploads'
+  API_LIMIT = '30'
+  NX_ADD_PLUGINS = 'false'
+
+[mounts]
+  source = 'postiz_uploads'
+  destination = '/uploads'
+  initial_size = '10gb'
+
+[http_service]
+  internal_port = 5000
+  force_https = true
+  # The orchestrator runs scheduled posts, so the Machine must stay up.
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = '180s'
+    interval = '30s'
+    timeout = '10s'
+    method = 'GET'
+    path = '/'
+
+[[vm]]
+  size = 'shared-cpu-2x'
+  memory = '2gb'

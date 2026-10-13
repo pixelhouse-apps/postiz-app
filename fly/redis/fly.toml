@@ -1,0 +1,14 @@
+# Redis for Postiz. Private: reachable only on the org network as
+# pixelhouse-postiz-redis.internal:6379.
+app = 'pixelhouse-postiz-redis'
+primary_region = 'syd'
+
+[build]
+  image = 'redis:7.2-alpine'
+
+[processes]
+  app = "sh -c 'exec redis-server --requirepass \"$REDIS_PASSWORD\" --bind \"* -::*\"'"
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '256mb'
