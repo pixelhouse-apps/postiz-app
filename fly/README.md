@@ -29,7 +29,21 @@ Run each from its config's directory, in this order the first time:
 (cd fly/postgres && fly deploy --ha=false)
 (cd fly/redis && fly deploy --ha=false)
 (cd fly/temporal && fly deploy --ha=false)
-fly deploy --ha=false
+fly deploy --ha=false --depot=false
 ```
 
-After that, app changes only need `fly deploy` from the repo root.
+After that, app changes only need `fly deploy --depot=false` from the repo root.
+
+## Building
+
+The app builds from `Dockerfile.fly`, a slimmer copy of upstream's
+`Dockerfile.dev`. Keep the two in step when merging upstream changes.
+
+The Next.js build needs more memory than the default Depot builder has, so
+deploys use `--depot=false`. That builds on the org's own builder app
+(`fly-builder-cinder-lagoon-3680`), which has been resized to 16 GB. If Fly
+recreates the builder, resize it again:
+
+```sh
+fly machine update <machine-id> -a <builder-app> --vm-memory 16384
+```

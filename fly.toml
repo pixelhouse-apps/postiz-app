@@ -4,7 +4,7 @@ app = 'pixelhouse-postiz'
 primary_region = 'syd'
 
 [build]
-  dockerfile = 'Dockerfile.dev'
+  dockerfile = 'Dockerfile.fly'
 
 [env]
   MAIN_URL = 'https://pixelhouse-postiz.fly.dev'

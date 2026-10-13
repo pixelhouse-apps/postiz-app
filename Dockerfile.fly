@@ -1,0 +1,46 @@
+# syntax=docker/dockerfile:1
+# Slimmer variant of Dockerfile.dev for Fly.io. The upstream image ships the pnpm
+# store, the Next.js build cache and the compilers (about 13 GB), which is too big
+# to push reliably to Fly's registry. This builds in one stage and copies only
+# what pm2 needs at runtime into the next.
+
+FROM node:22.20-bookworm-slim AS base
+RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
+
+FROM base AS build
+ARG NEXT_PUBLIC_VERSION
+ENV NEXT_PUBLIC_VERSION=$NEXT_PUBLIC_VERSION
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    g++ \
+    make \
+    python3-pip \
+&& rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . /app
+
+# Keep the pnpm store in a build cache instead of an image layer.
+RUN --mount=type=cache,id=postiz-pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install
+RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build \
+ && rm -rf apps/frontend/.next/cache
+
+FROM base
+ARG NEXT_PUBLIC_VERSION
+ENV NEXT_PUBLIC_VERSION=$NEXT_PUBLIC_VERSION
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    nginx \
+&& rm -rf /var/lib/apt/lists/*
+
+RUN addgroup --system www \
+ && adduser --system --ingroup www --home /www --shell /usr/sbin/nologin www \
+ && mkdir -p /www \
+ && chown -R www:www /www /var/lib/nginx
+
+COPY var/docker/nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /root/.cache/prisma /root/.cache/prisma
+COPY --from=build /app /app
+WORKDIR /app
+
+CMD ["sh", "-c", "nginx && pnpm run pm2"]
