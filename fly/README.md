@@ -40,10 +40,22 @@ The app builds from `Dockerfile.fly`, a slimmer copy of upstream's
 `Dockerfile.dev`. Keep the two in step when merging upstream changes.
 
 The Next.js build needs more memory than the default Depot builder has, so
-deploys use `--depot=false`. That builds on the org's own builder app
-(`fly-builder-cinder-lagoon-3680`), which has been resized to 16 GB. If Fly
-recreates the builder, resize it again:
+deploys use `--depot=false`. That builds on the org's own builder app (a
+`fly-builder-*` app in `fly apps list`), resized to 16 GB. flyctl sometimes
+replaces the builder with a new 8 GB one, so check and resize it before a
+deploy:
 
 ```sh
+fly machines list -a <builder-app>
 fly machine update <machine-id> -a <builder-app> --vm-memory 16384
+```
+
+The push from the builder to Fly's registry often fails partway with "blob
+upload unknown". The registry keeps the layers that did upload, and the build
+is cached on the builder, so rerunning the deploy usually finishes the push.
+
+If only `fly.toml` changed, skip the build and redeploy the current image:
+
+```sh
+fly deploy --ha=false --image "$(fly image show --json | jq -r '.[0] | "\(.Registry)/\(.Repository):\(.Tag)"')"
 ```
