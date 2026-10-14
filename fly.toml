@@ -34,11 +34,12 @@ primary_region = 'syd'
   min_machines_running = 1
 
   [[http_service.checks]]
-    grace_period = '180s'
+    grace_period = '60s'
     interval = '30s'
     timeout = '10s'
     method = 'GET'
-    path = '/'
+    # / redirects to /auth, and Fly counts a redirect as a failed check.
+    path = '/auth'
 
 [[vm]]
   size = 'shared-cpu-2x'
