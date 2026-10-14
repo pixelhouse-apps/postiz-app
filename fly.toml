@@ -7,9 +7,9 @@ primary_region = 'syd'
   dockerfile = 'Dockerfile.fly'
 
 [env]
-  MAIN_URL = 'https://pixelhouse-postiz.fly.dev'
-  FRONTEND_URL = 'https://pixelhouse-postiz.fly.dev'
-  NEXT_PUBLIC_BACKEND_URL = 'https://pixelhouse-postiz.fly.dev/api'
+  MAIN_URL = 'https://postiz.pixelhouse.tech'
+  FRONTEND_URL = 'https://postiz.pixelhouse.tech'
+  NEXT_PUBLIC_BACKEND_URL = 'https://postiz.pixelhouse.tech/api'
   BACKEND_INTERNAL_URL = 'http://localhost:3000'
   TEMPORAL_ADDRESS = 'pixelhouse-postiz-temporal.internal:7233'
   IS_GENERAL = 'true'

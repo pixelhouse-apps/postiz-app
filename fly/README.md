@@ -4,10 +4,15 @@ Postiz runs as four Fly apps in the `pixel-house-682` org, all in `syd`:
 
 | App | Config | Role |
 | --- | --- | --- |
-| `pixelhouse-postiz` | `../fly.toml` | Postiz itself, public at https://pixelhouse-postiz.fly.dev |
+| `pixelhouse-postiz` | `../fly.toml` | Postiz itself, public at https://postiz.pixelhouse.tech |
 | `pixelhouse-postiz-db` | `postgres/fly.toml` | Postgres 17 for Postiz and Temporal (private) |
 | `pixelhouse-postiz-redis` | `redis/fly.toml` | Redis (private) |
 | `pixelhouse-postiz-temporal` | `temporal/fly.toml` | Temporal server (private) |
+
+Use the custom domain, not `pixelhouse-postiz.fly.dev`: Postiz sets its login
+cookie on the parent domain, and browsers reject cookies for `.fly.dev`.
+DNS for `pixelhouse.tech` is on Cloudflare; the `postiz` A and AAAA records
+point at the app's Fly IPs (`fly ips list`) and must stay DNS-only (not proxied).
 
 ## Secrets
 
